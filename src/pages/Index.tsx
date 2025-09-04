@@ -1,14 +1,14 @@
-import { useState, useMemo } from 'react';
-import { Group, Team, Match } from '@/types/tournament';
-import { initialGroups, createTeam } from '@/data/initialTournamentData';
+import { useMemo } from 'react';
+import { Team, Match } from '@/types/tournament';
+import { createTeam } from '@/data/initialTournamentData';
 import GroupTable from '@/components/GroupTable';
 import AdminPanel from '@/components/AdminPanel';
 import MatchTracker from '@/components/MatchTracker';
 import { useToast } from '@/hooks/use-toast';
+import { useTournamentStorage } from '@/hooks/useTournamentStorage';
 
 const Index = () => {
-  const [groups, setGroups] = useState<Group[]>(initialGroups);
-  const [matches, setMatches] = useState<Match[]>([]);
+  const { groups, matches, setGroups, setMatches } = useTournamentStorage();
   const { toast } = useToast();
 
   const calculateTeamStats = (team: Team, homeMatches: any[], awayMatches: any[]): Team => {
