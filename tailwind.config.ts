@@ -52,6 +52,16 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				tournament: {
+					bg: 'hsl(var(--tournament-bg))',
+					header: 'hsl(var(--group-header))',
+					'table-header': 'hsl(var(--table-header))'
+				},
+				admin: {
+					primary: 'hsl(var(--admin-primary))',
+					success: 'hsl(var(--admin-success))',
+					danger: 'hsl(var(--admin-danger))'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
