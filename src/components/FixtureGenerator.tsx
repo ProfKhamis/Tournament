@@ -178,9 +178,19 @@ const FixtureGenerator: React.FC<FixtureGeneratorProps> = ({ groups }) => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Set canvas size
+    // Calculate required height based on content
+    let estimatedHeight = 100; // Initial space for title
+    groups.forEach(group => {
+      const fixtures = getFixturesForMatchday(group.id, selectedMatchday);
+      if (fixtures.length > 0) {
+        estimatedHeight += 70 + (fixtures.length * 45) + 20; // Group header + fixtures + spacing
+      }
+    });
+    estimatedHeight += 50; // Footer space
+
+    // Set canvas size with dynamic height
     canvas.width = 800;
-    canvas.height = 600;
+    canvas.height = Math.max(600, estimatedHeight);
 
     // Clear canvas
     ctx.fillStyle = '#ffffff';
@@ -354,11 +364,13 @@ const FixtureGenerator: React.FC<FixtureGeneratorProps> = ({ groups }) => {
         {/* Canvas Fixture Display */}
         <div className="border rounded-lg p-4">
           <h4 className="font-semibold mb-2">Visual Fixtures:</h4>
-          <canvas 
-            ref={canvasRef}
-            className="border rounded max-w-full"
-            style={{ display: 'block', margin: '0 auto' }}
-          />
+          <div className="overflow-auto max-h-[600px]">
+            <canvas 
+              ref={canvasRef}
+              className="border rounded"
+              style={{ display: 'block', margin: '0 auto', maxWidth: '100%' }}
+            />
+          </div>
         </div>
 
         {/* WhatsApp Preview */}
