@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Group, Team } from '@/types/tournament';
 import { initialGroups, createTeam } from '@/data/initialTournamentData';
 import GroupTable from '@/components/GroupTable';
@@ -135,7 +135,7 @@ const Index = () => {
     }));
   };
 
-  const calculateQualifiedTeams = () => {
+  const qualifiedTeams = useMemo(() => {
     // Get first place teams from each group
     const firstPlaceTeams = groups.map(group => {
       const sortedTeams = [...group.teams].sort((a, b) => b.points - a.points || b.goalDifference - a.goalDifference);
@@ -158,9 +158,7 @@ const Index = () => {
       firstPlace: firstPlaceTeams,
       secondPlace: topSecondPlaceTeams
     };
-  };
-
-  const qualifiedTeams = calculateQualifiedTeams();
+  }, [groups]);
 
   return (
     <div className="min-h-screen bg-tournament-bg p-4">
