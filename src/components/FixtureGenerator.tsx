@@ -1,9 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Group } from '@/types/tournament';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Copy, Download } from 'lucide-react';
+import { Copy, Download, Image } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Fixture {
@@ -19,42 +19,69 @@ interface FixtureGeneratorProps {
 
 const FixtureGenerator: React.FC<FixtureGeneratorProps> = ({ groups }) => {
   const [selectedMatchday, setSelectedMatchday] = useState<number>(1);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const { toast } = useToast();
 
+  // Fair Round Robin Algorithm - ensures each team plays all others exactly once per round
   const generateDoubleRoundRobin = (teams: string[]): Fixture[] => {
     const fixtures: Fixture[] = [];
     const n = teams.length;
     
     if (n < 2) return fixtures;
 
-    // Generate first round (each team plays each other once)
+    // Create proper round-robin schedule
     for (let round = 1; round <= 2; round++) {
-      let matchday = 1;
+      const roundFixtures: Fixture[] = [];
       
-      // Use round-robin algorithm
-      for (let i = 0; i < n - 1; i++) {
-        for (let j = 0; j < Math.floor(n / 2); j++) {
-          let home = (i + j) % (n - 1);
-          let away = (n - 1 - j + i) % (n - 1);
-          
-          if (j === 0) {
-            away = n - 1;
-          }
-
-          // In second round, swap home and away
-          if (round === 2) {
-            [home, away] = [away, home];
-          }
-
-          fixtures.push({
-            homeTeam: teams[home],
-            awayTeam: teams[away],
-            matchday: matchday + (round - 1) * (n - 1),
+      // Generate all possible pairings
+      for (let i = 0; i < n; i++) {
+        for (let j = i + 1; j < n; j++) {
+          const isFirstRound = round === 1;
+          roundFixtures.push({
+            homeTeam: isFirstRound ? teams[i] : teams[j],
+            awayTeam: isFirstRound ? teams[j] : teams[i],
+            matchday: 0, // Will be assigned below
             round
           });
         }
-        matchday++;
       }
+
+      // Distribute fixtures across matchdays to ensure fairness
+      const matchdays: Fixture[][] = [];
+      const teamMatchdays: Map<string, Set<number>> = new Map();
+      
+      // Initialize team tracking
+      teams.forEach(team => teamMatchdays.set(team, new Set()));
+      
+      roundFixtures.forEach(fixture => {
+        let assignedMatchday = -1;
+        
+        // Find a matchday where both teams are available
+        for (let md = 0; md < matchdays.length; md++) {
+          const homeTeamBusy = teamMatchdays.get(fixture.homeTeam)?.has(md);
+          const awayTeamBusy = teamMatchdays.get(fixture.awayTeam)?.has(md);
+          
+          if (!homeTeamBusy && !awayTeamBusy) {
+            assignedMatchday = md;
+            break;
+          }
+        }
+        
+        // If no existing matchday works, create a new one
+        if (assignedMatchday === -1) {
+          assignedMatchday = matchdays.length;
+          matchdays.push([]);
+        }
+        
+        // Assign fixture and mark teams as busy
+        fixture.matchday = assignedMatchday + 1 + (round - 1) * (n - 1);
+        matchdays[assignedMatchday].push(fixture);
+        teamMatchdays.get(fixture.homeTeam)?.add(assignedMatchday);
+        teamMatchdays.get(fixture.awayTeam)?.add(assignedMatchday);
+
+      });
+      
+      fixtures.push(...roundFixtures);
     }
     
     return fixtures;
@@ -74,9 +101,14 @@ const FixtureGenerator: React.FC<FixtureGeneratorProps> = ({ groups }) => {
   }, [groups]);
 
   const maxMatchdays = useMemo(() => {
-    const maxTeams = Math.max(...groups.map(g => g.teams.length));
-    return maxTeams >= 2 ? (maxTeams - 1) * 2 : 0;
-  }, [groups]);
+    let maxMatchday = 0;
+    Object.values(allFixtures).forEach(groupFixtures => {
+      groupFixtures.forEach(fixture => {
+        maxMatchday = Math.max(maxMatchday, fixture.matchday);
+      });
+    });
+    return maxMatchday;
+  }, [allFixtures]);
 
   const getFixturesForMatchday = (groupId: string, matchday: number) => {
     return allFixtures[groupId]?.filter(fixture => fixture.matchday === matchday) || [];
@@ -138,6 +170,99 @@ const FixtureGenerator: React.FC<FixtureGeneratorProps> = ({ groups }) => {
     });
   };
 
+  // Canvas drawing function for fixtures
+  const drawFixturesToCanvas = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Set canvas size
+    canvas.width = 800;
+    canvas.height = 600;
+
+    // Clear canvas
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Title
+    ctx.fillStyle = '#1a1a1a';
+    ctx.font = 'bold 24px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(`MATCHDAY ${selectedMatchday} FIXTURES`, canvas.width / 2, 40);
+
+    let yPos = 80;
+    const groupColors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6'];
+
+    groups.forEach((group, groupIndex) => {
+      const fixtures = getFixturesForMatchday(group.id, selectedMatchday);
+      if (fixtures.length === 0) return;
+
+      // Group header
+      ctx.fillStyle = groupColors[groupIndex % groupColors.length];
+      ctx.fillRect(50, yPos - 5, canvas.width - 100, 30);
+      
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 16px Arial';
+      ctx.textAlign = 'left';
+      ctx.fillText(`${group.name} - Round ${fixtures[0]?.round || 1}`, 60, yPos + 15);
+
+      yPos += 40;
+
+      // Fixtures
+      fixtures.forEach((fixture, index) => {
+        // Match box
+        ctx.fillStyle = '#f8f9fa';
+        ctx.fillRect(60, yPos, canvas.width - 120, 35);
+        ctx.strokeStyle = '#e9ecef';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(60, yPos, canvas.width - 120, 35);
+
+        // Team names
+        ctx.fillStyle = '#1a1a1a';
+        ctx.font = '14px Arial';
+        ctx.textAlign = 'left';
+        ctx.fillText(fixture.homeTeam, 70, yPos + 20);
+        
+        ctx.textAlign = 'center';
+        ctx.fillText('vs', canvas.width / 2, yPos + 20);
+        
+        ctx.textAlign = 'right';
+        ctx.fillText(fixture.awayTeam, canvas.width - 70, yPos + 20);
+
+        yPos += 45;
+      });
+
+      yPos += 20;
+    });
+
+    // Footer
+    ctx.fillStyle = '#6b7280';
+    ctx.font = '12px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Generated by Tournament Management System', canvas.width / 2, canvas.height - 20);
+  };
+
+  useEffect(() => {
+    drawFixturesToCanvas();
+  }, [selectedMatchday, groups, allFixtures]);
+
+  const downloadCanvasImage = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const link = document.createElement('a');
+    link.download = `matchday-${selectedMatchday}-fixtures.png`;
+    link.href = canvas.toDataURL();
+    link.click();
+
+    toast({
+      title: "Downloaded!",
+      description: `Matchday ${selectedMatchday} fixtures saved as image`
+    });
+  };
+
   if (maxMatchdays === 0) {
     return (
       <Card>
@@ -155,11 +280,17 @@ const FixtureGenerator: React.FC<FixtureGeneratorProps> = ({ groups }) => {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          Fixture Generator - Double Round Robin
-          <Button onClick={downloadFixtures} variant="outline" size="sm">
-            <Download className="w-4 h-4 mr-2" />
-            Download All
-          </Button>
+          Fair Fixture Generator - Double Round Robin
+          <div className="flex gap-2">
+            <Button onClick={downloadCanvasImage} variant="outline" size="sm">
+              <Image className="w-4 h-4 mr-2" />
+              Save Image
+            </Button>
+            <Button onClick={downloadFixtures} variant="outline" size="sm">
+              <Download className="w-4 h-4 mr-2" />
+              Download All
+            </Button>
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -218,6 +349,16 @@ const FixtureGenerator: React.FC<FixtureGeneratorProps> = ({ groups }) => {
               </div>
             );
           })}
+        </div>
+
+        {/* Canvas Fixture Display */}
+        <div className="border rounded-lg p-4">
+          <h4 className="font-semibold mb-2">Visual Fixtures:</h4>
+          <canvas 
+            ref={canvasRef}
+            className="border rounded max-w-full"
+            style={{ display: 'block', margin: '0 auto' }}
+          />
         </div>
 
         {/* WhatsApp Preview */}
