@@ -4,6 +4,7 @@ import { createTeam } from '@/data/initialTournamentData';
 import GroupTable from '@/components/GroupTable';
 import AdminPanel from '@/components/AdminPanel';
 import MatchTracker from '@/components/MatchTracker';
+import FixtureGenerator from '@/components/FixtureGenerator';
 import { useToast } from '@/hooks/use-toast';
 import { useTournamentStorage } from '@/hooks/useTournamentStorage';
 
@@ -209,8 +210,9 @@ const Index = () => {
           </div>
         </div>
 
-        <div className="mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <MatchTracker groups={groups} matches={matches} />
+          <FixtureGenerator groups={groups} />
         </div>
 
         <AdminPanel
