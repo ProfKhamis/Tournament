@@ -20,7 +20,8 @@ export interface Match {
   id: string;
   homeTeam: string;
   awayTeam: string;
-  homeScore?: number;
-  awayScore?: number;
+  homeScore: number;
+  awayScore: number;
   groupId: string;
+  date: string;
 }

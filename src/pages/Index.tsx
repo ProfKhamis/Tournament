@@ -1,12 +1,14 @@
 import { useState, useMemo } from 'react';
-import { Group, Team } from '@/types/tournament';
+import { Group, Team, Match } from '@/types/tournament';
 import { initialGroups, createTeam } from '@/data/initialTournamentData';
 import GroupTable from '@/components/GroupTable';
 import AdminPanel from '@/components/AdminPanel';
+import MatchTracker from '@/components/MatchTracker';
 import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
   const [groups, setGroups] = useState<Group[]>(initialGroups);
+  const [matches, setMatches] = useState<Match[]>([]);
   const { toast } = useToast();
 
   const calculateTeamStats = (team: Team, homeMatches: any[], awayMatches: any[]): Team => {
@@ -77,6 +79,21 @@ const Index = () => {
   };
 
   const handleSubmitScore = (homeTeamId: string, awayTeamId: string, homeScore: number, awayScore: number, groupId: string) => {
+    // Create match record
+    const newMatch: Match = {
+      id: `match-${Date.now()}`,
+      homeTeam: homeTeamId,
+      awayTeam: awayTeamId,
+      homeScore,
+      awayScore,
+      groupId,
+      date: new Date().toISOString(),
+    };
+
+    // Add match to matches list
+    setMatches(prev => [...prev, newMatch]);
+
+    // Update team stats
     setGroups(prev => prev.map(group => {
       if (group.id === groupId) {
         const updatedTeams = group.teams.map(team => {
@@ -190,6 +207,10 @@ const Index = () => {
               8 teams advance to Quarter-Finals
             </div>
           </div>
+        </div>
+
+        <div className="mb-8">
+          <MatchTracker groups={groups} matches={matches} />
         </div>
 
         <AdminPanel
