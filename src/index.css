@@ -43,6 +43,12 @@ All colors MUST be HSL.
     --admin-primary: 240 100% 50%;
     --admin-success: 142 71% 45%;
     --admin-danger: 0 84% 60%;
+    
+    /* Qualification highlights */
+    --qualified-first: 142 76% 36%;
+    --qualified-first-bg: 142 76% 96%;
+    --qualified-second: 45 93% 47%;
+    --qualified-second-bg: 45 93% 95%;
 
     --radius: 0.5rem;
 

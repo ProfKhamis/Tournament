@@ -135,6 +135,33 @@ const Index = () => {
     }));
   };
 
+  const calculateQualifiedTeams = () => {
+    // Get first place teams from each group
+    const firstPlaceTeams = groups.map(group => {
+      const sortedTeams = [...group.teams].sort((a, b) => b.points - a.points || b.goalDifference - a.goalDifference);
+      return sortedTeams[0]?.id || '';
+    }).filter(id => id);
+
+    // Get all second place teams and sort them by points and goal difference
+    const secondPlaceTeams = groups.map(group => {
+      const sortedTeams = [...group.teams].sort((a, b) => b.points - a.points || b.goalDifference - a.goalDifference);
+      return sortedTeams[1] || null;
+    }).filter(team => team !== null);
+
+    // Sort second place teams and take top 3
+    const topSecondPlaceTeams = secondPlaceTeams
+      .sort((a, b) => b.points - a.points || b.goalDifference - a.goalDifference)
+      .slice(0, 3)
+      .map(team => team.id);
+
+    return {
+      firstPlace: firstPlaceTeams,
+      secondPlace: topSecondPlaceTeams
+    };
+  };
+
+  const qualifiedTeams = calculateQualifiedTeams();
+
   return (
     <div className="min-h-screen bg-tournament-bg p-4">
       <div className="max-w-7xl mx-auto">
@@ -145,8 +172,26 @@ const Index = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {groups.map((group) => (
-            <GroupTable key={group.id} group={group} />
+            <GroupTable key={group.id} group={group} qualifiedTeams={qualifiedTeams} />
           ))}
+        </div>
+
+        {/* Qualification Legend */}
+        <div className="mb-6 p-4 bg-card rounded-xl border border-border">
+          <h3 className="text-lg font-semibold mb-3 text-center">Qualification Status</h3>
+          <div className="flex flex-wrap justify-center gap-4">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-qualified-first rounded"></div>
+              <span className="text-sm font-medium">Group Winners (5 teams)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-qualified-second rounded"></div>
+              <span className="text-sm font-medium">Best 2nd Place (3 teams)</span>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              8 teams advance to Quarter-Finals
+            </div>
+          </div>
         </div>
 
         <AdminPanel

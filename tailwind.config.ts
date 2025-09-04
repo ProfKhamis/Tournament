@@ -62,6 +62,12 @@ export default {
 					success: 'hsl(var(--admin-success))',
 					danger: 'hsl(var(--admin-danger))'
 				},
+				qualified: {
+					first: 'hsl(var(--qualified-first))',
+					'first-bg': 'hsl(var(--qualified-first-bg))',
+					second: 'hsl(var(--qualified-second))',
+					'second-bg': 'hsl(var(--qualified-second-bg))'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',

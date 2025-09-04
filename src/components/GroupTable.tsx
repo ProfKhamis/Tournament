@@ -1,10 +1,32 @@
-import { Group } from '@/types/tournament';
+import { Group, Team } from '@/types/tournament';
 
 interface GroupTableProps {
   group: Group;
+  qualifiedTeams: {
+    firstPlace: string[];
+    secondPlace: string[];
+  };
 }
 
-const GroupTable = ({ group }: GroupTableProps) => {
+const GroupTable = ({ group, qualifiedTeams }: GroupTableProps) => {
+  const getTeamHighlight = (team: Team, position: number) => {
+    if (qualifiedTeams.firstPlace.includes(team.id) && position === 0) {
+      return {
+        rowClass: "bg-qualified-first-bg border-l-4 border-qualified-first",
+        badge: "1ST"
+      };
+    }
+    if (qualifiedTeams.secondPlace.includes(team.id) && position === 1) {
+      return {
+        rowClass: "bg-qualified-second-bg border-l-4 border-qualified-second",
+        badge: "Q"
+      };
+    }
+    return {
+      rowClass: "",
+      badge: null
+    };
+  };
   return (
     <div className="bg-card rounded-2xl p-6 shadow-sm border border-border">
       <h2 className="text-xl font-semibold text-tournament-header mb-6 text-center">
@@ -25,18 +47,30 @@ const GroupTable = ({ group }: GroupTableProps) => {
         {/* Teams */}
         {group.teams
           .sort((a, b) => b.points - a.points || b.goalDifference - a.goalDifference)
-          .map((team) => (
-            <div key={team.id} className="grid grid-cols-12 gap-2 text-sm py-3 hover:bg-muted/30 transition-colors">
-              <div className="col-span-6 font-medium text-foreground text-left truncate pr-4">
-                {team.name}
+          .map((team, index) => {
+            const highlight = getTeamHighlight(team, index);
+            return (
+              <div key={team.id} className={`grid grid-cols-12 gap-2 text-sm py-3 hover:bg-muted/30 transition-colors rounded-lg ${highlight.rowClass}`}>
+                <div className="col-span-6 font-medium text-foreground text-left truncate pr-4 flex items-center gap-2">
+                  {team.name}
+                  {highlight.badge && (
+                    <span className={`text-xs px-2 py-1 rounded-full font-bold ${
+                      highlight.badge === "1ST" 
+                        ? "bg-qualified-first text-white" 
+                        : "bg-qualified-second text-white"
+                    }`}>
+                      {highlight.badge}
+                    </span>
+                  )}
+                </div>
+                <div className="col-span-1 text-center text-foreground font-medium">{team.wins}</div>
+                <div className="col-span-1 text-center text-foreground font-medium">{team.draws}</div>
+                <div className="col-span-1 text-center text-foreground font-medium">{team.losses}</div>
+                <div className="col-span-1 text-center text-foreground font-medium">{team.goalDifference}</div>
+                <div className="col-span-2 text-center font-semibold text-foreground">{team.points}</div>
               </div>
-              <div className="col-span-1 text-center text-foreground font-medium">{team.wins}</div>
-              <div className="col-span-1 text-center text-foreground font-medium">{team.draws}</div>
-              <div className="col-span-1 text-center text-foreground font-medium">{team.losses}</div>
-              <div className="col-span-1 text-center text-foreground font-medium">{team.goalDifference}</div>
-              <div className="col-span-2 text-center font-semibold text-foreground">{team.points}</div>
-            </div>
-          ))}
+            );
+          })}
       </div>
     </div>
   );
