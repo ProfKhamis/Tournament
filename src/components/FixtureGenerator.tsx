@@ -287,35 +287,51 @@ const FixtureGenerator: React.FC<FixtureGeneratorProps> = ({ groups }) => {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          Fair Fixture Generator - Double Round Robin
-          <div className="flex gap-2">
-            <Button onClick={downloadCanvasImage} variant="outline" size="sm">
-              <Image className="w-4 h-4 mr-2" />
-              Save Image
-            </Button>
-            <Button onClick={downloadFixtures} variant="outline" size="sm">
-              <Download className="w-4 h-4 mr-2" />
-              Download All
-            </Button>
+    <Card className="w-full">
+      <CardHeader className="pb-4">
+        <div className="flex flex-col space-y-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-xl font-bold">
+              Fair Fixture Generator
+            </CardTitle>
+            <div className="flex gap-2">
+              <Button onClick={downloadCanvasImage} variant="outline" size="sm" className="flex items-center gap-2">
+                <Image className="w-4 h-4" />
+                Save Image
+              </Button>
+              <Button onClick={downloadFixtures} variant="outline" size="sm" className="flex items-center gap-2">
+                <Download className="w-4 h-4" />
+                Download All
+              </Button>
+            </div>
           </div>
-        </CardTitle>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="px-3 py-1">
+              Double Round Robin
+            </Badge>
+            <span className="text-sm text-muted-foreground">
+              Each team plays all others twice (home & away)
+            </span>
+          </div>
+        </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
         {/* Matchday Selector */}
-        <div className="flex flex-wrap gap-2">
-          {Array.from({ length: maxMatchdays }, (_, i) => i + 1).map(matchday => (
-            <Button
-              key={matchday}
-              variant={selectedMatchday === matchday ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedMatchday(matchday)}
-            >
-              Matchday {matchday}
-            </Button>
-          ))}
+        <div className="space-y-3">
+          <h3 className="text-lg font-semibold">Select Matchday</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
+            {Array.from({ length: maxMatchdays }, (_, i) => i + 1).map(matchday => (
+              <Button
+                key={matchday}
+                variant={selectedMatchday === matchday ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedMatchday(matchday)}
+                className="w-full"
+              >
+                MD {matchday}
+              </Button>
+            ))}
+          </div>
         </div>
 
         {/* Current Matchday Fixtures */}
@@ -326,59 +342,67 @@ const FixtureGenerator: React.FC<FixtureGeneratorProps> = ({ groups }) => {
               onClick={() => copyToClipboard(generateWhatsAppText(selectedMatchday))}
               variant="outline" 
               size="sm"
+              className="flex items-center gap-2"
             >
-              <Copy className="w-4 h-4 mr-2" />
+              <Copy className="w-4 h-4" />
               Copy for WhatsApp
             </Button>
           </div>
 
-          {groups.map(group => {
+          <div className="grid gap-4">{groups.map(group => {
             const fixtures = getFixturesForMatchday(group.id, selectedMatchday);
             if (fixtures.length === 0) return null;
 
             return (
-              <div key={group.id} className="border rounded-lg p-4">
+              <div key={group.id} className="border rounded-lg p-4 bg-card/50">
                 <div className="flex items-center gap-2 mb-3">
-                  <h4 className="font-semibold">{group.name}</h4>
-                  <Badge variant="secondary">
+                  <h4 className="font-semibold text-base">{group.name}</h4>
+                  <Badge variant="secondary" className="text-xs">
                     Round {fixtures[0]?.round || 1}
                   </Badge>
                 </div>
-                <div className="space-y-2">
+                <div className="grid gap-2">
                   {fixtures.map((fixture, index) => (
                     <div 
                       key={index}
-                      className="flex items-center justify-between p-2 bg-muted rounded"
+                      className="flex items-center justify-between p-3 bg-background rounded border border-border/50 hover:border-border transition-colors"
                     >
-                      <span className="font-medium">{fixture.homeTeam}</span>
-                      <span className="text-muted-foreground">vs</span>
-                      <span className="font-medium">{fixture.awayTeam}</span>
+                      <span className="font-medium text-sm">{fixture.homeTeam}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">vs</span>
+                      </div>
+                      <span className="font-medium text-sm">{fixture.awayTeam}</span>
                     </div>
                   ))}
                 </div>
               </div>
             );
           })}
+          </div>
         </div>
 
         {/* Canvas Fixture Display */}
-        <div className="border rounded-lg p-4">
-          <h4 className="font-semibold mb-2">Visual Fixtures:</h4>
-          <div className="overflow-auto max-h-[600px]">
-            <canvas 
-              ref={canvasRef}
-              className="border rounded"
-              style={{ display: 'block', margin: '0 auto', maxWidth: '100%' }}
-            />
+        <div className="space-y-3">
+          <h3 className="text-lg font-semibold">Visual Fixture Display</h3>
+          <div className="border rounded-lg overflow-hidden bg-card/30">
+            <div className="overflow-auto max-h-[500px] p-2">
+              <canvas 
+                ref={canvasRef}
+                className="border rounded bg-white shadow-sm"
+                style={{ display: 'block', margin: '0 auto', maxWidth: '100%' }}
+              />
+            </div>
           </div>
         </div>
 
         {/* WhatsApp Preview */}
-        <div className="border rounded-lg p-4 bg-muted/50">
-          <h4 className="font-semibold mb-2">WhatsApp Preview:</h4>
-          <pre className="text-sm whitespace-pre-wrap font-mono">
-            {generateWhatsAppText(selectedMatchday)}
-          </pre>
+        <div className="space-y-3">
+          <h3 className="text-lg font-semibold">WhatsApp Preview</h3>
+          <div className="border rounded-lg p-4 bg-muted/30">
+            <pre className="text-sm whitespace-pre-wrap font-mono text-muted-foreground leading-relaxed">
+              {generateWhatsAppText(selectedMatchday)}
+            </pre>
+          </div>
         </div>
       </CardContent>
     </Card>
