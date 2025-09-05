@@ -3,7 +3,7 @@ import { Group, Fixture } from '@/types/tournament';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Copy, Download, Image, RefreshCw, Lock } from 'lucide-react';
+import { Copy, Download, Image, RefreshCw, Lock, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface FixtureGeneratorProps {
@@ -103,6 +103,97 @@ const FixtureGenerator: React.FC<FixtureGeneratorProps> = ({ groups, fixtures, s
     toast({
       title: "Fixtures Generated!",
       description: "Tournament fixtures have been created and locked."
+    });
+  };
+
+  const setOriginalFixtures = () => {
+    const originalFixtures: Fixture[] = [
+      // Group A fixtures
+      { homeTeam: "LEGEND KILLER", awayTeam: "MBOMBOCLAT", matchday: 1, round: 1, groupId: "group-a" },
+      { homeTeam: "ÇEASER", awayTeam: "TYCOON", matchday: 1, round: 1, groupId: "group-a" },
+      { homeTeam: "TYCOON", awayTeam: "MBOMBOCLAT", matchday: 2, round: 1, groupId: "group-a" },
+      { homeTeam: "LEGEND KILLER", awayTeam: "ÇEASER", matchday: 3, round: 1, groupId: "group-a" },
+      { homeTeam: "MBOMBOCLAT", awayTeam: "ÇEASER", matchday: 4, round: 1, groupId: "group-a" },
+      { homeTeam: "TYCOON", awayTeam: "LEGEND KILLER", matchday: 5, round: 1, groupId: "group-a" },
+      
+      // Round 2 for Group A
+      { homeTeam: "MBOMBOCLAT", awayTeam: "LEGEND KILLER", matchday: 6, round: 2, groupId: "group-a" },
+      { homeTeam: "TYCOON", awayTeam: "ÇEASER", matchday: 6, round: 2, groupId: "group-a" },
+      { homeTeam: "MBOMBOCLAT", awayTeam: "TYCOON", matchday: 7, round: 2, groupId: "group-a" },
+      { homeTeam: "ÇEASER", awayTeam: "LEGEND KILLER", matchday: 8, round: 2, groupId: "group-a" },
+      { homeTeam: "ÇEASER", awayTeam: "MBOMBOCLAT", matchday: 9, round: 2, groupId: "group-a" },
+      { homeTeam: "LEGEND KILLER", awayTeam: "TYCOON", matchday: 10, round: 2, groupId: "group-a" },
+
+      // Group B fixtures
+      { homeTeam: "PUMAS FC", awayTeam: "FCMKHI99", matchday: 1, round: 1, groupId: "group-b" },
+      { homeTeam: "SCAVANGERS", awayTeam: "VJMOHANZE", matchday: 1, round: 1, groupId: "group-b" },
+      { homeTeam: "VJMOHANZE", awayTeam: "FCMKHI99", matchday: 2, round: 1, groupId: "group-b" },
+      { homeTeam: "PUMAS FC", awayTeam: "SCAVANGERS", matchday: 3, round: 1, groupId: "group-b" },
+      { homeTeam: "FCMKHI99", awayTeam: "SCAVANGERS", matchday: 4, round: 1, groupId: "group-b" },
+      { homeTeam: "VJMOHANZE", awayTeam: "PUMAS FC", matchday: 5, round: 1, groupId: "group-b" },
+      
+      // Round 2 for Group B
+      { homeTeam: "FCMKHI99", awayTeam: "PUMAS FC", matchday: 6, round: 2, groupId: "group-b" },
+      { homeTeam: "VJMOHANZE", awayTeam: "SCAVANGERS", matchday: 6, round: 2, groupId: "group-b" },
+      { homeTeam: "FCMKHI99", awayTeam: "VJMOHANZE", matchday: 7, round: 2, groupId: "group-b" },
+      { homeTeam: "SCAVANGERS", awayTeam: "PUMAS FC", matchday: 8, round: 2, groupId: "group-b" },
+      { homeTeam: "SCAVANGERS", awayTeam: "FCMKHI99", matchday: 9, round: 2, groupId: "group-b" },
+      { homeTeam: "PUMAS FC", awayTeam: "VJMOHANZE", matchday: 10, round: 2, groupId: "group-b" },
+
+      // Group C fixtures
+      { homeTeam: "JEONJU G", awayTeam: "A-L-F-R-3-D", matchday: 1, round: 1, groupId: "group-c" },
+      { homeTeam: "FARO BV", awayTeam: "CHELSEA", matchday: 1, round: 1, groupId: "group-c" },
+      { homeTeam: "CHELSEA", awayTeam: "A-L-F-R-3-D", matchday: 2, round: 1, groupId: "group-c" },
+      { homeTeam: "JEONJU G", awayTeam: "FARO BV", matchday: 3, round: 1, groupId: "group-c" },
+      { homeTeam: "A-L-F-R-3-D", awayTeam: "FARO BV", matchday: 4, round: 1, groupId: "group-c" },
+      { homeTeam: "CHELSEA", awayTeam: "JEONJU G", matchday: 5, round: 1, groupId: "group-c" },
+      
+      // Round 2 for Group C
+      { homeTeam: "A-L-F-R-3-D", awayTeam: "JEONJU G", matchday: 6, round: 2, groupId: "group-c" },
+      { homeTeam: "CHELSEA", awayTeam: "FARO BV", matchday: 6, round: 2, groupId: "group-c" },
+      { homeTeam: "A-L-F-R-3-D", awayTeam: "CHELSEA", matchday: 7, round: 2, groupId: "group-c" },
+      { homeTeam: "FARO BV", awayTeam: "JEONJU G", matchday: 8, round: 2, groupId: "group-c" },
+      { homeTeam: "FARO BV", awayTeam: "A-L-F-R-3-D", matchday: 9, round: 2, groupId: "group-c" },
+      { homeTeam: "JEONJU G", awayTeam: "CHELSEA", matchday: 10, round: 2, groupId: "group-c" },
+
+      // Group D fixtures
+      { homeTeam: "THE RALPH", awayTeam: "MANCHESTER UNITED", matchday: 1, round: 1, groupId: "group-d" },
+      { homeTeam: "LONDON BUOY", awayTeam: "SHAKUR254", matchday: 1, round: 1, groupId: "group-d" },
+      { homeTeam: "SHAKUR254", awayTeam: "MANCHESTER UNITED", matchday: 2, round: 1, groupId: "group-d" },
+      { homeTeam: "THE RALPH", awayTeam: "LONDON BUOY", matchday: 3, round: 1, groupId: "group-d" },
+      { homeTeam: "MANCHESTER UNITED", awayTeam: "LONDON BUOY", matchday: 4, round: 1, groupId: "group-d" },
+      { homeTeam: "SHAKUR254", awayTeam: "THE RALPH", matchday: 5, round: 1, groupId: "group-d" },
+      
+      // Round 2 for Group D
+      { homeTeam: "MANCHESTER UNITED", awayTeam: "THE RALPH", matchday: 6, round: 2, groupId: "group-d" },
+      { homeTeam: "SHAKUR254", awayTeam: "LONDON BUOY", matchday: 6, round: 2, groupId: "group-d" },
+      { homeTeam: "MANCHESTER UNITED", awayTeam: "SHAKUR254", matchday: 7, round: 2, groupId: "group-d" },
+      { homeTeam: "LONDON BUOY", awayTeam: "THE RALPH", matchday: 8, round: 2, groupId: "group-d" },
+      { homeTeam: "LONDON BUOY", awayTeam: "MANCHESTER UNITED", matchday: 9, round: 2, groupId: "group-d" },
+      { homeTeam: "THE RALPH", awayTeam: "SHAKUR254", matchday: 10, round: 2, groupId: "group-d" },
+
+      // Group E fixtures
+      { homeTeam: "HAVE MERCY", awayTeam: "PERFECT COMBI", matchday: 1, round: 1, groupId: "group-e" },
+      { homeTeam: "ALLAN FC", awayTeam: "ÜNRÜLLY", matchday: 1, round: 1, groupId: "group-e" },
+      { homeTeam: "ÜNRÜLLY", awayTeam: "PERFECT COMBI", matchday: 2, round: 1, groupId: "group-e" },
+      { homeTeam: "HAVE MERCY", awayTeam: "ALLAN FC", matchday: 3, round: 1, groupId: "group-e" },
+      { homeTeam: "PERFECT COMBI", awayTeam: "ALLAN FC", matchday: 4, round: 1, groupId: "group-e" },
+      { homeTeam: "ÜNRÜLLY", awayTeam: "HAVE MERCY", matchday: 5, round: 1, groupId: "group-e" },
+      
+      // Round 2 for Group E
+      { homeTeam: "PERFECT COMBI", awayTeam: "HAVE MERCY", matchday: 6, round: 2, groupId: "group-e" },
+      { homeTeam: "ÜNRÜLLY", awayTeam: "ALLAN FC", matchday: 6, round: 2, groupId: "group-e" },
+      { homeTeam: "PERFECT COMBI", awayTeam: "ÜNRÜLLY", matchday: 7, round: 2, groupId: "group-e" },
+      { homeTeam: "ALLAN FC", awayTeam: "HAVE MERCY", matchday: 8, round: 2, groupId: "group-e" },
+      { homeTeam: "ALLAN FC", awayTeam: "PERFECT COMBI", matchday: 9, round: 2, groupId: "group-e" },
+      { homeTeam: "HAVE MERCY", awayTeam: "ÜNRÜLLY", matchday: 10, round: 2, groupId: "group-e" },
+    ];
+
+    setFixtures(originalFixtures);
+    setFixturesGenerated(true);
+    toast({
+      title: "Original Fixtures Set!",
+      description: "Fixtures matching the WhatsApp announcement have been loaded."
     });
   };
 
@@ -308,10 +399,16 @@ const FixtureGenerator: React.FC<FixtureGeneratorProps> = ({ groups, fixtures, s
         <CardContent className="space-y-4">
           <p className="text-muted-foreground">Need at least 2 teams per group to generate fixtures.</p>
           {groups.some(group => group.teams.length >= 2) && (
-            <Button onClick={generateAllFixtures} className="w-full">
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Generate Tournament Fixtures
-            </Button>
+            <div className="space-y-2">
+              <Button onClick={setOriginalFixtures} className="w-full" variant="default">
+                <Upload className="w-4 h-4 mr-2" />
+                Use Original WhatsApp Fixtures
+              </Button>
+              <Button onClick={generateAllFixtures} className="w-full" variant="outline">
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Generate New Tournament Fixtures
+              </Button>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -326,10 +423,16 @@ const FixtureGenerator: React.FC<FixtureGeneratorProps> = ({ groups, fixtures, s
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-muted-foreground">Tournament fixtures not yet generated.</p>
-          <Button onClick={generateAllFixtures} className="w-full">
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Generate Tournament Fixtures
-          </Button>
+          <div className="space-y-2">
+            <Button onClick={setOriginalFixtures} className="w-full" variant="default">
+              <Upload className="w-4 h-4 mr-2" />
+              Use Original WhatsApp Fixtures
+            </Button>
+            <Button onClick={generateAllFixtures} className="w-full" variant="outline">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Generate New Tournament Fixtures
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );
