@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useTournamentStorage } from '@/hooks/useTournamentStorage';
 
 const Index = () => {
-  const { groups, matches, setGroups, setMatches } = useTournamentStorage();
+  const { groups, matches, fixtures, setGroups, setMatches, setFixtures } = useTournamentStorage();
   const { toast } = useToast();
 
   const calculateTeamStats = (team: Team, homeMatches: any[], awayMatches: any[]): Team => {
@@ -212,7 +212,7 @@ const Index = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <MatchTracker groups={groups} matches={matches} />
-          <FixtureGenerator groups={groups} />
+          <FixtureGenerator groups={groups} fixtures={fixtures} setFixtures={setFixtures} />
         </div>
 
         <AdminPanel

@@ -16,6 +16,14 @@ export interface Group {
   teams: Team[];
 }
 
+export interface Fixture {
+  homeTeam: string;
+  awayTeam: string;
+  matchday: number;
+  round: number;
+  groupId: string;
+}
+
 export interface Match {
   id: string;
   homeTeam: string;
