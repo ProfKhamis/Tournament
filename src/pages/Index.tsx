@@ -66,6 +66,12 @@ const Index = () => {
   };
 
   const handleEditTeam = (groupId: string, teamId: string, newName: string) => {
+    // Find the current team name to update fixtures
+    const currentTeamName = groups
+      .find(group => group.id === groupId)
+      ?.teams.find(team => team.id === teamId)?.name;
+
+    // Update groups
     setGroups(prev => prev.map(group => {
       if (group.id === groupId) {
         return {
@@ -77,6 +83,15 @@ const Index = () => {
       }
       return group;
     }));
+
+    // Update fixtures to reflect the new team name
+    if (currentTeamName) {
+      setFixtures(prev => prev.map(fixture => ({
+        ...fixture,
+        homeTeam: fixture.homeTeam === currentTeamName ? newName : fixture.homeTeam,
+        awayTeam: fixture.awayTeam === currentTeamName ? newName : fixture.awayTeam
+      })));
+    }
   };
 
   const handleSubmitScore = (homeTeamId: string, awayTeamId: string, homeScore: number, awayScore: number, groupId: string) => {
