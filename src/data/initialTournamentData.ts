@@ -12,6 +12,21 @@ export const createTeam = (id: string, name: string): Team => ({
   goalDifference: 0,
 });
 
+export const createInitialGroups = (numberOfGroups: number): Group[] => {
+  const groupNames = ['Group A', 'Group B', 'Group C', 'Group D'];
+  const groups: Group[] = [];
+
+  for (let i = 0; i < numberOfGroups; i++) {
+    groups.push({
+      id: `group-${String.fromCharCode(97 + i)}`,
+      name: groupNames[i],
+      teams: []
+    });
+  }
+
+  return groups;
+};
+
 export const initialGroups: Group[] = [
   {
     id: 'group-a',
@@ -51,16 +66,6 @@ export const initialGroups: Group[] = [
       createTeam('team-14', 'MANCHESTER UNITED'),
       createTeam('team-15', 'LONDON BUOY'),
       createTeam('team-16', 'SHAKUR254'),
-    ],
-  },
-  {
-    id: 'group-e',
-    name: 'Group E',
-    teams: [
-      createTeam('team-17', 'HAVE MERCY'),
-      createTeam('team-18', 'LEFTFOOT MAGIC'),
-      createTeam('team-19', 'ALLAN FC'),
-      createTeam('team-20', 'ÜNRÜLLY'),
     ],
   },
 ];

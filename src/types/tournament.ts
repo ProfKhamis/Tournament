@@ -33,3 +33,13 @@ export interface Match {
   groupId: string;
   date: string;
 }
+
+export interface KnockoutMatch {
+  id: string;
+  homeTeam: string;
+  awayTeam: string;
+  homeScore: number | null;
+  awayScore: number | null;
+  round: 'quarter' | 'semi' | 'final';
+  matchNumber: number;
+}
