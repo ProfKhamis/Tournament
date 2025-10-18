@@ -7,9 +7,10 @@ import { useState } from 'react';
 interface KnockoutBracketProps {
   matches: KnockoutMatch[];
   onUpdateScore: (matchId: string, homeScore: number, awayScore: number) => void;
+  readOnly?: boolean;
 }
 
-export const KnockoutBracket = ({ matches, onUpdateScore }: KnockoutBracketProps) => {
+export const KnockoutBracket = ({ matches, onUpdateScore, readOnly = false }: KnockoutBracketProps) => {
   const [scores, setScores] = useState<Record<string, { home: string; away: string }>>({});
 
   const quarters = matches.filter(m => m.round === 'quarter');
@@ -45,7 +46,7 @@ export const KnockoutBracket = ({ matches, onUpdateScore }: KnockoutBracketProps
               <span className="font-bold text-lg">{match.awayScore}</span>
             )}
           </div>
-          {match.homeScore === null && match.homeTeam && match.awayTeam && (
+          {!readOnly && match.homeScore === null && match.homeTeam && match.awayTeam && (
             <div className="flex gap-2 mt-2">
               <Input
                 type="number"
