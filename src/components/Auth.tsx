@@ -92,14 +92,13 @@ export const Auth = () => {
           <h2 className="text-xl font-bold mb-4 dark:text-gray-100">Email Verification Required</h2>
           <p className="text-sm text-muted-foreground mb-6 dark:text-gray-300">
             A verification email has been sent to <strong>{email}</strong>. Please check your inbox and click the verification link to access the dashboard.
-            If you don’t see the verification email in your inbox, please check your spam or junk folder.
           </p>
           <Button
             onClick={async () => {
               const currentUser = auth.currentUser as FirebaseUser | null;
               if (currentUser) {
                 await sendEmailVerification(currentUser);
-                toast.success('Verification email resent! Check your inbox. If you don’t see the verification email in your inbox, please check your spam or junk folder.');
+                toast.success('Verification email resent! Check your inbox.');
               }
             }}
             className="mb-4 w-full bg-primary text-white dark:bg-gray-700 dark:text-gray-100"

@@ -8,14 +8,8 @@ import { KnockoutBracket } from '@/components/KnockoutBracket';
 import { PublicFixturesView } from '@/components/PublicFixturesView';
 import { PublicMatchHistory } from '@/components/PublicMatchHistory';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Trophy, Loader2, Swords } from 'lucide-react';
+import { ArrowLeft, Trophy, Loader2, Swords } from 'lucide-react'; // Added Swords and Loader2
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-// (Assuming TournamentDoc is defined elsewhere for type safety)
-interface TournamentDoc {
-    name: string;
-    numberOfGroups: number;
-}
 
 // 🟢 Loading Component for Initial Fetch
 const TournamentLoadingSkeleton = () => (
@@ -35,48 +29,52 @@ export const PublicTournamentView = () => {
     const [tournamentName, setTournamentName] = useState('');
     const [numberOfGroups, setNumberOfGroups] = useState(4);
     
+    // 🟢 State to manage the initial loading of tournament details
     const [isLoadingDetails, setIsLoadingDetails] = useState(true);
 
     // useTournament hook already handles data fetching and potentially its own loading state
     const { groups, matches, fixtures, knockoutMatches, isLoading: isLoadingTournamentData } = useTournament(tournamentId || '', numberOfGroups);
 
+    // 🟢 COMBINED LOADING STATE
     const isTotalLoading = isLoadingDetails || isLoadingTournamentData;
 
     useEffect(() => {
         if (!tournamentId || !db) return;
         
-        setIsLoadingDetails(true);
+        setIsLoadingDetails(true); // Start loading
 
-        const unsubscribe = onSnapshot(doc(db, 'tournaments', tournamentId), (docSnap) => {
-            if (docSnap.exists()) {
-                // ✅ Added type assertion for better safety
-                const data = docSnap.data() as TournamentDoc; 
-                setTournamentName(data.name || 'Tournament Not Found');
-                setNumberOfGroups(data.numberOfGroups || 4); // Added fallback
+        const unsubscribe = onSnapshot(doc(db, 'tournaments', tournamentId), (doc) => {
+            if (doc.exists()) {
+                const data = doc.data();
+                setTournamentName(data.name);
+                setNumberOfGroups(data.numberOfGroups);
             } else {
+                // Optional: navigate to 404 or error page if tournament not found
                 setTournamentName('Tournament Not Found');
             }
-            setIsLoadingDetails(false);
+            setIsLoadingDetails(false); // End loading regardless of success/fail
         });
 
         return () => unsubscribe();
     }, [tournamentId]);
 
-    // ❌ REMOVED: The global qualifiedTeams calculation is not needed here
-    /* const qualifiedTeams = groups.flatMap(group => {
+    const qualifiedTeams = groups.flatMap(group => {
         const sortedTeams = [...group.teams].sort((a, b) => 
             b.points - a.points || b.goalDifference - a.goalDifference
         );
+        // Assuming top 2 qualify
         return sortedTeams.slice(0, 2).map(team => team.id);
     });
-    */
 
     const hasKnockoutMatches = knockoutMatches.length > 0;
 
     return (
         <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-accent/10 to-primary/5 relative">
             
-            {/* Header remains unchanged */}
+            {/* =================================
+              1. CATCHY TOP LOGO (Fixed Header)
+              =================================
+            */}
             <header className="fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border/50 shadow-md p-4 flex justify-between items-center h-16">
                 <div className="flex items-center space-x-2">
                     <Swords className="w-5 h-5 text-primary" />
@@ -91,13 +89,17 @@ export const PublicTournamentView = () => {
                 </Button>
             </header>
 
-            <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 mt-16 pb-20">
+            {/* =================================
+              2. MAIN CONTENT AREA
+              =================================
+            */}
+            <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 mt-16 pb-20"> {/* pt-16 for header, pb-20 for footer */}
 
                 {isTotalLoading ? (
                     <TournamentLoadingSkeleton />
                 ) : (
                     <>
-                        {/* Tournament Title Block remains unchanged */}
+                        {/* Tournament Title Block */}
                         <div className="text-center py-6 sm:py-8 mb-4">
                             <div className="flex justify-center items-center gap-3 mb-2">
                                 <Trophy className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
@@ -110,6 +112,7 @@ export const PublicTournamentView = () => {
                             </p>
                         </div>
 
+                        {/* Tabs Navigation (Responsive) */}
                         <Tabs defaultValue="groups" className="w-full">
                             <TabsList className="grid w-full max-w-4xl mx-auto grid-cols-4 h-auto">
                                 <TabsTrigger value="groups" className="text-sm sm:text-base">Groups</TabsTrigger>
@@ -120,44 +123,31 @@ export const PublicTournamentView = () => {
                                 </TabsTrigger>
                             </TabsList>
 
-                            {/* Groups Content */}
+                            {/* Groups Content (Responsive Grid) */}
                             <TabsContent value="groups" className="mt-6">
                                 <div className="mb-6 p-4 bg-card rounded-xl border border-border shadow-md">
                                     <h3 className="text-base sm:text-lg font-semibold mb-3 text-center">Qualification Status</h3>
                                     <div className="flex flex-wrap justify-center gap-4">
                                         <div className="flex items-center gap-2">
-                                            <div className="w-4 h-4 bg-qualified-first rounded-sm"></div> 
+                                            <div className="w-4 h-4 bg-primary rounded-sm"></div> {/* Using primary color for qualification indicator */}
                                             <span className="text-sm font-medium text-muted-foreground">Top 2 from each group advance</span>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                    {groups.slice(0, numberOfGroups).map((group) => {
-                                        // ✅ CORRECTED LOGIC: Calculate qualifiers FOR THIS GROUP
-                                        const sortedTeams = [...group.teams].sort((a, b) => 
-                                            b.points - a.points || b.goalDifference - a.goalDifference
-                                        );
-                                        
-                                        const firstPlaceTeamId = sortedTeams[0]?.id ? [sortedTeams[0].id] : [];
-                                        const secondPlaceTeamId = sortedTeams[1]?.id ? [sortedTeams[1].id] : [];
-
-                                        return (
-                                            <GroupTable 
-                                                key={group.id} 
-                                                group={group} 
-                                                // ✅ CORRECTED: Pass the specific 1st and 2nd place teams for the current group
-                                                qualifiedTeams={{ 
-                                                    firstPlace: firstPlaceTeamId, 
-                                                    secondPlace: secondPlaceTeamId 
-                                                }} 
-                                            />
-                                        );
-                                    })}
+                                    {groups.slice(0, numberOfGroups).map((group) => (
+                                        <GroupTable 
+                                            key={group.id} 
+                                            group={group} 
+                                            // Passing qualified teams for visual highlighting
+                                            qualifiedTeams={{ firstPlace: qualifiedTeams, secondPlace: [] }} 
+                                        />
+                                    ))}
                                 </div>
                             </TabsContent>
 
-                            {/* Other Tabs Content remains unchanged */}
+                            {/* Fixtures, Matches, Knockout (Responsive containers) */}
                             <TabsContent value="fixtures" className="mt-6">
                                 <PublicFixturesView groups={groups.slice(0, numberOfGroups)} fixtures={fixtures} />
                             </TabsContent>
@@ -180,11 +170,15 @@ export const PublicTournamentView = () => {
                 )}
             </main>
 
-            {/* Footer remains unchanged */}
-           <footer className="fixed bottom-0 left-0 right-0 z-40 bg-card border-t border-border/50 text-center py-4 text-xs sm:text-sm text-muted-foreground shadow-lg">
-        <p>© {new Date().getFullYear()} EasyLeague. May the best team win</p>
-        
-      </footer>
+            {/* =================================
+              3. CATCHY FIXED FOOTER
+              =================================
+            */}
+            <footer className="fixed bottom-0 left-0 right-0 z-40 bg-card border-t-4 border-primary/50 text-center py-3 text-xs sm:text-sm text-muted-foreground shadow-inner shadow-primary/10">
+                <p>
+                    Powered by <span className="font-semibold text-primary">EasyLeague</span>. May the best team win 🏆
+                </p>
+            </footer>
         </div>
     );
 };

@@ -4,8 +4,8 @@ import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  sendEmailVerification,
   signOut,
-  // 1. Import Google Auth utilities
   GoogleAuthProvider,
   signInWithPopup,
 } from 'firebase/auth';
@@ -14,11 +14,11 @@ import { auth } from '@/config/firebase';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  isEmailVerified: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  // 2. signInWithGoogle is now correctly defined in the interface
-  signInWithGoogle: () => Promise<void>; 
+  signInWithGoogle: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -32,71 +32,64 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
 
-  // 🔹 Watch authentication state
   useEffect(() => {
-    if (!auth) {
-      console.error('Firebase Auth is not initialized.');
-      setLoading(false);
-      return;
-    }
-
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
+      setIsEmailVerified(firebaseUser?.emailVerified || false);
       setLoading(false);
     });
-
-    return () => unsubscribe(); // cleanup listener on unmount
+    return () => unsubscribe();
   }, []);
 
-  // 🔹 Sign in existing user
   const signIn = async (email: string, password: string) => {
     if (!auth) throw new Error('Firebase not configured');
     try {
       await signInWithEmailAndPassword(auth, email, password);
     } catch (error: any) {
-      console.error('Sign-in failed:', error.message);
       throw new Error(error.message);
     }
   };
 
-  // 🔹 Register new user
   const signUp = async (email: string, password: string) => {
     if (!auth) throw new Error('Firebase not configured');
+    // Optional: validate email format
+    const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    if (!isValidEmail) throw new Error('Please enter a valid email address');
+    
     try {
       await createUserWithEmailAndPassword(auth, email, password);
+      // Send verification email
+      if (auth.currentUser) {
+        await sendEmailVerification(auth.currentUser);
+      }
     } catch (error: any) {
-      console.error('Sign-up failed:', error.message);
       throw new Error(error.message);
     }
   };
 
-  // 🔹 Log out user
   const logout = async () => {
     if (!auth) throw new Error('Firebase not configured');
     try {
       await signOut(auth);
     } catch (error: any) {
-      console.error('Logout failed:', error.message);
       throw new Error(error.message);
     }
   };
 
-  // 🚀 Sign in with Google
   const signInWithGoogle = async () => {
     if (!auth) throw new Error('Firebase not configured');
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
     } catch (error: any) {
-      // User might close the popup or encounter a network error
-      console.error('Google Sign-in failed:', error.message);
       throw new Error(error.message);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, logout, signInWithGoogle }}>
+    <AuthContext.Provider value={{ user, loading, isEmailVerified, signIn, signUp, logout, signInWithGoogle }}>
       {children}
     </AuthContext.Provider>
   );

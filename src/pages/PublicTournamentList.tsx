@@ -152,8 +152,7 @@ export const PublicTournamentList = () => {
 
       {/* FOOTER */}
       <footer className="fixed bottom-0 left-0 right-0 z-40 bg-card border-t border-border/50 text-center py-4 text-xs sm:text-sm text-muted-foreground shadow-lg">
-        <p>© {new Date().getFullYear()} EasyLeague. May the best team win</p>
-        
+        <p>© {new Date().getFullYear()} EasyLeague. May the best team win 🏆</p>
       </footer>
     </div>
   );
