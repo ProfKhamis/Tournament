@@ -11,6 +11,7 @@ import { useTournament } from '@/hooks/useTournament';
 import { Button } from '@/components/ui/button';
 import { LogOut, RotateCcw } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdmin } from '@/hooks/useAdmin';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,6 +33,7 @@ interface TournamentPageProps {
 
 export const TournamentPage = ({ tournamentId, numberOfGroups, onBack }: TournamentPageProps) => {
   const { logout } = useAuth();
+  const { isAdmin } = useAdmin();
   const { groups, matches, fixtures, knockoutMatches, updateGroups, updateMatches, updateFixtures, updateKnockoutMatches } = useTournament(tournamentId, numberOfGroups);
   const { toast } = useToast();
   const [showKnockout, setShowKnockout] = useState(false);
@@ -382,10 +384,12 @@ export const TournamentPage = ({ tournamentId, numberOfGroups, onBack }: Tournam
             <p className="text-muted-foreground">Manage teams and track tournament progress</p>
           </div>
           <div className="flex gap-2">
-            <Button onClick={() => setResetDialogOpen(true)} variant="outline">
-              <RotateCcw className="w-4 h-4 mr-2" />
-              Reset Tournament
-            </Button>
+            {isAdmin && (
+              <Button onClick={() => setResetDialogOpen(true)} variant="outline">
+                <RotateCcw className="w-4 h-4 mr-2" />
+                Reset Tournament
+              </Button>
+            )}
             <Button onClick={onBack} variant="outline">Back</Button>
             <Button onClick={handleLogout} variant="outline">
               <LogOut className="w-4 h-4 mr-2" />

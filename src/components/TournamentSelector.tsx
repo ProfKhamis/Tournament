@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { collection, query, where, onSnapshot, addDoc, Timestamp, deleteDoc, doc, getDocs } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdmin } from '@/hooks/useAdmin';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,6 +34,7 @@ interface TournamentSelectorProps {
 
 export const TournamentSelector = ({ onSelectTournament }: TournamentSelectorProps) => {
   const { user } = useAuth();
+  const { isAdmin } = useAdmin();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [showCreate, setShowCreate] = useState(false);
   const [tournamentName, setTournamentName] = useState('');
@@ -135,13 +137,15 @@ export const TournamentSelector = ({ onSelectTournament }: TournamentSelectorPro
                         {tournament.numberOfGroups} groups
                       </span>
                     </Button>
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      onClick={(e) => confirmDelete(tournament, e)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    {isAdmin && (
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        onClick={(e) => confirmDelete(tournament, e)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
                   </div>
                 ))}
               </div>
