@@ -76,10 +76,15 @@ export const TournamentPage = ({ tournamentId, numberOfGroups, onBack }: Tournam
       return;
     }
     
-    if (targetGroup.teams.some(team => team.name.toLowerCase() === teamName.toLowerCase())) {
+    // Check for duplicates across ALL groups
+    const isDuplicate = groups.some(group => 
+      group.teams.some(team => team.name.toLowerCase() === teamName.toLowerCase())
+    );
+    
+    if (isDuplicate) {
       toast({ 
         title: "Error", 
-        description: "A team with this name already exists in this group",
+        description: "A team with this name already exists in the tournament",
         variant: "destructive" 
       });
       return;
@@ -111,10 +116,15 @@ export const TournamentPage = ({ tournamentId, numberOfGroups, onBack }: Tournam
     const targetGroup = groups.find(g => g.id === groupId);
     const currentTeamName = targetGroup?.teams.find(team => team.id === teamId)?.name;
 
-    if (targetGroup?.teams.some(team => team.id !== teamId && team.name.toLowerCase() === newName.toLowerCase())) {
+    // Check for duplicates across ALL groups (excluding the current team being edited)
+    const isDuplicate = groups.some(group => 
+      group.teams.some(team => team.id !== teamId && team.name.toLowerCase() === newName.toLowerCase())
+    );
+    
+    if (isDuplicate) {
       toast({ 
         title: "Error", 
-        description: "A team with this name already exists in this group",
+        description: "A team with this name already exists in the tournament",
         variant: "destructive" 
       });
       return;
