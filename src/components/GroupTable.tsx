@@ -10,16 +10,18 @@ interface GroupTableProps {
 
 const GroupTable = ({ group, qualifiedTeams }: GroupTableProps) => {
   const getTeamHighlight = (team: Team, position: number) => {
-    if (qualifiedTeams.firstPlace.includes(team.id) && position === 0) {
-      return {
-        rowClass: "bg-qualified-first-bg border-l-4 border-qualified-first",
-        badge: "1ST"
+    // Check for FIRST PLACE
+    if (qualifiedTeams.firstPlace.includes(team.id)) {
+      return { 
+        rowClass: "bg-qualified-first-bg border-l-4 border-qualified-first", 
+        badge: "1ST" // <-- Correctly marks 1st place
       };
     }
-    if (qualifiedTeams.secondPlace.includes(team.id) && position === 1) {
-      return {
-        rowClass: "bg-qualified-second-bg border-l-4 border-qualified-second",
-        badge: "Q"
+    // Check for SECOND PLACE
+    if (qualifiedTeams.secondPlace.includes(team.id)) {
+      return { 
+        rowClass: "bg-qualified-second-bg border-l-4 border-qualified-second", 
+        badge: "2ND" // ✅ FIX: Changed badge from "Q" to "2ND"
       };
     }
     return {

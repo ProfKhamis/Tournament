@@ -1,9 +1,12 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { 
+  getAuth, 
+  setPersistence, 
+  inMemoryPersistence 
+} from 'firebase/auth';
 
-// TODO: Add your Firebase configuration here
-// Get these values from Firebase Console > Project Settings > General > Your apps
+// Firebase configuration
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "",
@@ -14,8 +17,9 @@ const firebaseConfig = {
 };
 
 // Check if Firebase is configured
-const isFirebaseConfigured = firebaseConfig.apiKey && 
-  firebaseConfig.authDomain && 
+const isFirebaseConfigured =
+  firebaseConfig.apiKey &&
+  firebaseConfig.authDomain &&
   firebaseConfig.projectId;
 
 // Initialize Firebase only if configured
@@ -27,6 +31,14 @@ if (isFirebaseConfigured) {
   app = initializeApp(firebaseConfig);
   db = getFirestore(app);
   auth = getAuth(app);
+
+  setPersistence(auth, inMemoryPersistence)
+    .then(() => {
+      console.log('Firebase Auth persistence set to in-memory (session cleared on reload)');
+    })
+    .catch((error) => {
+      console.error('Failed to set auth persistence:', error);
+    });
 } else {
   console.warn('Firebase not configured. Please add your Firebase credentials.');
 }

@@ -8,6 +8,8 @@ export interface Team {
   goalsAgainst: number;
   points: number;
   goalDifference: number;
+  // ✅ FIX: ADD THE MISSING 'played' PROPERTY
+  played: number; 
 }
 
 export interface Group {
@@ -17,6 +19,7 @@ export interface Group {
 }
 
 export interface Fixture {
+  id: string;
   homeTeam: string;
   awayTeam: string;
   matchday: number;
