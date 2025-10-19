@@ -187,7 +187,7 @@ export const Auth = () => {
                 <div className="relative animate-in fade-in slide-in-from-top-2 duration-500">
                   <Input
                     type="password"
-                    placeholder="Confirm Password (optional)"
+                    placeholder="Confirm Password"
                     className="pl-10 h-10 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
                   />
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />

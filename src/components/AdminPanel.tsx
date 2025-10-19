@@ -71,17 +71,20 @@ const AdminPanel = ({ groups, onAddTeam, onRemoveTeam, onEditTeam, onSubmitScore
   return (
     <Dialog>
       <DialogTrigger asChild>
+        {/* The fixed positioning is good for mobile accessibility */}
         <Button variant="outline" className="fixed top-4 right-4 z-50">
           <Trophy className="w-4 h-4 mr-2" />
           Admin Panel
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      {/* Ensure the dialog content is responsive on small screens */}
+      <DialogContent className="max-w-4xl max-h-[90vh] w-[95%] sm:w-full overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-center">Tournament Admin Panel</DialogTitle>
         </DialogHeader>
         
         <Tabs defaultValue="teams" className="w-full">
+          {/* TabsList remains excellent for mobile full-width navigation */}
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="teams">Manage Teams</TabsTrigger>
             <TabsTrigger value="scores">Submit Scores</TabsTrigger>
@@ -98,7 +101,8 @@ const AdminPanel = ({ groups, onAddTeam, onRemoveTeam, onEditTeam, onSubmitScore
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                {/* ⭐ RESPONSIVENESS FIX: grid-cols-1 on mobile, grid-cols-2 on medium screens */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> 
                   <div>
                     <Label htmlFor="team-name">Team Name</Label>
                     <Input
@@ -143,12 +147,15 @@ const AdminPanel = ({ groups, onAddTeam, onRemoveTeam, onEditTeam, onSubmitScore
                       <div className="space-y-2">
                         {group.teams.map((team) => (
                           <div key={team.id} className="flex items-center justify-between p-2 bg-muted rounded">
-                            <span>{team.name}</span>
-                            <div className="flex gap-2">
+                            {/* Allow team names to wrap on small screens */}
+                            <span className="truncate mr-2">{team.name}</span> 
+                            <div className="flex gap-2 shrink-0">
                               <Button
                                 size="sm"
                                 variant="outline"
                                 onClick={() => setEditingTeam({ groupId: group.id, teamId: team.id, name: team.name })}
+                                // Added `aria-label` for better accessibility
+                                aria-label={`Edit ${team.name}`} 
                               >
                                 <Edit2 className="w-4 h-4" />
                               </Button>
@@ -156,6 +163,7 @@ const AdminPanel = ({ groups, onAddTeam, onRemoveTeam, onEditTeam, onSubmitScore
                                 size="sm"
                                 variant="destructive"
                                 onClick={() => onRemoveTeam(group.id, team.id)}
+                                aria-label={`Remove ${team.name}`}
                               >
                                 <Trash2 className="w-4 h-4" />
                               </Button>
@@ -197,7 +205,8 @@ const AdminPanel = ({ groups, onAddTeam, onRemoveTeam, onEditTeam, onSubmitScore
 
                 {scoreEntry.groupId && (
                   <>
-                    <div className="grid grid-cols-2 gap-4">
+                    {/* ⭐ RESPONSIVENESS FIX: grid-cols-1 on mobile, grid-cols-2 on medium screens */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> 
                       <div>
                         <Label>Home Team</Label>
                         <Select
@@ -236,7 +245,8 @@ const AdminPanel = ({ groups, onAddTeam, onRemoveTeam, onEditTeam, onSubmitScore
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    {/* ⭐ RESPONSIVENESS FIX: grid-cols-1 on mobile, grid-cols-2 on medium screens */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> 
                       <div>
                         <Label>Home Score</Label>
                         <Input
@@ -274,7 +284,8 @@ const AdminPanel = ({ groups, onAddTeam, onRemoveTeam, onEditTeam, onSubmitScore
                 <CardTitle>Tournament Overview</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* The original grid was responsive, but made explicit for clarity */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"> 
                   {groups.map((group) => (
                     <div key={group.id} className="p-4 border rounded-lg">
                       <h4 className="font-semibold mb-2">{group.name}</h4>
@@ -289,7 +300,7 @@ const AdminPanel = ({ groups, onAddTeam, onRemoveTeam, onEditTeam, onSubmitScore
           </TabsContent>
         </Tabs>
 
-        {/* Edit Team Dialog */}
+        {/* Edit Team Dialog - already responsive */}
         {editingTeam && (
           <Dialog open={!!editingTeam} onOpenChange={() => setEditingTeam(null)}>
             <DialogContent>
@@ -305,7 +316,7 @@ const AdminPanel = ({ groups, onAddTeam, onRemoveTeam, onEditTeam, onSubmitScore
                     onChange={(e) => setEditingTeam({ ...editingTeam, name: e.target.value })}
                   />
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-col sm:flex-row">
                   <Button onClick={handleEditTeam} className="flex-1">
                     Save Changes
                   </Button>

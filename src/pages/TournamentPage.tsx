@@ -9,9 +9,9 @@ import { KnockoutBracket } from '@/components/KnockoutBracket';
 import { useToast } from '@/hooks/use-toast';
 import { useTournament } from '@/hooks/useTournament';
 import { Button } from '@/components/ui/button';
-import { LogOut, RotateCcw } from 'lucide-react';
+import { LogOut, RotateCcw, ArrowLeft, Menu, Settings } from 'lucide-react'; 
 import { useAuth } from '@/contexts/AuthContext';
-import { useAdmin } from '@/hooks/useAdmin.ts';
+import { useAdmin } from '@/hooks/useAdmin';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,6 +22,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+
+import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+    SheetClose
+} from "@/components/ui/sheet"; 
+
 import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 
@@ -38,6 +48,10 @@ export const TournamentPage = ({ tournamentId, numberOfGroups, onBack }: Tournam
   const { toast } = useToast();
   const [showKnockout, setShowKnockout] = useState(false);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false); 
+
+
+  // --- Helper Functions (Restored) ---
 
   const calculateTeamStats = (team: Team, homeMatches: any[], awayMatches: any[]): Team => {
     let wins = 0, draws = 0, losses = 0, goalsFor = 0, goalsAgainst = 0;
@@ -365,6 +379,7 @@ export const TournamentPage = ({ tournamentId, numberOfGroups, onBack }: Tournam
       setShowKnockout(false);
       toast({ title: "Success", description: "Tournament reset successfully. You can now start fresh!" });
       setResetDialogOpen(false);
+      setIsSheetOpen(false); // Close the sheet after action
     } catch (error) {
       toast({ 
         title: "Error", 
@@ -375,28 +390,81 @@ export const TournamentPage = ({ tournamentId, numberOfGroups, onBack }: Tournam
     }
   };
 
+  // --- End Helper Functions ---
+
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-accent/20 p-4">
       <div className="max-w-7xl mx-auto">
-        <header className="flex justify-between items-center mb-8">
-          <div className="text-center flex-1">
-            <h1 className="text-3xl font-bold text-primary mb-2">Tournament Management</h1>
-            <p className="text-muted-foreground">Manage teams and track tournament progress</p>
+        
+        <header className="flex items-start justify-between mb-8 pb-4 border-b border-border">
+          
+          {/* 1. Mobile Navigation Trigger (Left Position) - Visible only on small screens */}
+          <div className="md:hidden pt-1">
+            <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+                <SheetTrigger asChild>
+                    {/* Added mr-2 to push the title away from the button */}
+                    <Button variant="outline" size="icon" className="mr-2"> 
+                        <Menu className="w-5 h-5" />
+                        <span className="sr-only">Open menu</span>
+                    </Button>
+                </SheetTrigger>
+                {/* Sheet slides in from the left */}
+                <SheetContent side="left" className="w-[250px] sm:w-[300px]">
+                    <SheetHeader>
+                        <SheetTitle className="flex items-center">
+                            <Settings className="w-5 h-5 mr-2" /> Admin Actions
+                        </SheetTitle>
+                    </SheetHeader>
+                    {/* Stacked Action Buttons */}
+                    <div className="flex flex-col gap-4 mt-8">
+                        <SheetClose asChild>
+                            <Button onClick={onBack} variant="outline" className="w-full justify-start">
+                                <ArrowLeft className="w-4 h-4 mr-2" /> Back to Tournaments
+                            </Button>
+                        </SheetClose>
+                        {isAdmin && (
+                            <SheetClose asChild>
+                                <Button onClick={() => { setResetDialogOpen(true); }} variant="destructive" className="w-full justify-start">
+                                    <RotateCcw className="w-4 h-4 mr-2" /> Reset Tournament
+                                </Button>
+                            </SheetClose>
+                        )}
+                        <SheetClose asChild>
+                            <Button onClick={handleLogout} variant="outline" className="w-full justify-start text-red-500 border-red-500 hover:bg-red-50 hover:text-red-600">
+                                <LogOut className="w-4 h-4 mr-2" /> Logout
+                            </Button>
+                        </SheetClose>
+                    </div>
+                </SheetContent>
+            </Sheet>
           </div>
-          <div className="flex gap-2">
+
+          <div className="flex-grow text-center"> 
+            <h1 className="text-2xl font-bold text-primary hidden sm:inline">Tournament Management</h1>
+            <p className="text-sm text-muted-foreground pt-10 block">Manage teams and track progress</p>
+          </div>
+          
+          <div className="hidden md:flex gap-2 pt-1"> 
+            <Button onClick={onBack} variant="outline">Back</Button>
             {isAdmin && (
               <Button onClick={() => setResetDialogOpen(true)} variant="outline">
                 <RotateCcw className="w-4 h-4 mr-2" />
                 Reset Tournament
               </Button>
             )}
-            <Button onClick={onBack} variant="outline">Back</Button>
             <Button onClick={handleLogout} variant="outline">
               <LogOut className="w-4 h-4 mr-2" />
               Logout
             </Button>
           </div>
+          
+          {/* Filler div to balance the title position when desktop buttons are visible */}
+          {/* The width is set to roughly match the space taken by the desktop buttons on the right. */}
+          <div className="hidden md:block w-[180px] lg:w-[300px]"></div>
         </header>
+
+        {/* --- Main Content --- */}
 
         {!showKnockout ? (
           <>
@@ -418,7 +486,7 @@ export const TournamentPage = ({ tournamentId, numberOfGroups, onBack }: Tournam
                 </div>
               </div>
               <div className="mt-4 text-center">
-                <Button onClick={generateKnockoutBracket} size="lg">
+                <Button onClick={generateKnockoutBracket} size="lg" className="w-full md:w-auto">
                   Generate Knockout Bracket
                 </Button>
               </div>
@@ -458,7 +526,7 @@ export const TournamentPage = ({ tournamentId, numberOfGroups, onBack }: Tournam
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setIsSheetOpen(false)}>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleResetTournament} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Reset Tournament
             </AlertDialogAction>
