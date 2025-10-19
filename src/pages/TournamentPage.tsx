@@ -56,6 +56,17 @@ export const TournamentPage = ({ tournamentId, numberOfGroups, onBack }: Tournam
   };
 
   const handleAddTeam = (groupId: string, teamName: string) => {
+    const targetGroup = groups.find(g => g.id === groupId);
+    
+    if (targetGroup?.teams.some(team => team.name.toLowerCase() === teamName.toLowerCase())) {
+      toast({ 
+        title: "Error", 
+        description: "A team with this name already exists in this group",
+        variant: "destructive" 
+      });
+      return;
+    }
+
     const updatedGroups = groups.map(group => {
       if (group.id === groupId) {
         const newTeam = createTeam(`team-${Date.now()}`, teamName);
@@ -64,6 +75,7 @@ export const TournamentPage = ({ tournamentId, numberOfGroups, onBack }: Tournam
       return group;
     });
     updateGroups(updatedGroups);
+    toast({ title: "Success", description: "Team added successfully" });
   };
 
   const handleRemoveTeam = (groupId: string, teamId: string) => {
@@ -78,9 +90,17 @@ export const TournamentPage = ({ tournamentId, numberOfGroups, onBack }: Tournam
   };
 
   const handleEditTeam = (groupId: string, teamId: string, newName: string) => {
-    const currentTeamName = groups
-      .find(group => group.id === groupId)
-      ?.teams.find(team => team.id === teamId)?.name;
+    const targetGroup = groups.find(g => g.id === groupId);
+    const currentTeamName = targetGroup?.teams.find(team => team.id === teamId)?.name;
+
+    if (targetGroup?.teams.some(team => team.id !== teamId && team.name.toLowerCase() === newName.toLowerCase())) {
+      toast({ 
+        title: "Error", 
+        description: "A team with this name already exists in this group",
+        variant: "destructive" 
+      });
+      return;
+    }
 
     const updatedGroups = groups.map(group => {
       if (group.id === groupId) {
@@ -94,6 +114,7 @@ export const TournamentPage = ({ tournamentId, numberOfGroups, onBack }: Tournam
       return group;
     });
     updateGroups(updatedGroups);
+    toast({ title: "Success", description: "Team updated successfully" });
 
     if (currentTeamName) {
       const updatedFixtures = fixtures.map(fixture => ({
