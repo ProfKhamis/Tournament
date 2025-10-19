@@ -9,8 +9,20 @@ import { KnockoutBracket } from '@/components/KnockoutBracket';
 import { useToast } from '@/hooks/use-toast';
 import { useTournament } from '@/hooks/useTournament';
 import { Button } from '@/components/ui/button';
-import { LogOut } from 'lucide-react';
+import { LogOut, RotateCcw } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { db } from '@/config/firebase';
 
 interface TournamentPageProps {
   tournamentId: string;
@@ -23,6 +35,7 @@ export const TournamentPage = ({ tournamentId, numberOfGroups, onBack }: Tournam
   const { groups, matches, fixtures, knockoutMatches, updateGroups, updateMatches, updateFixtures, updateKnockoutMatches } = useTournament(tournamentId, numberOfGroups);
   const { toast } = useToast();
   const [showKnockout, setShowKnockout] = useState(false);
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
   const calculateTeamStats = (team: Team, homeMatches: any[], awayMatches: any[]): Team => {
     let wins = 0, draws = 0, losses = 0, goalsFor = 0, goalsAgainst = 0;
@@ -333,6 +346,33 @@ export const TournamentPage = ({ tournamentId, numberOfGroups, onBack }: Tournam
     onBack();
   };
 
+  const handleResetTournament = async () => {
+    try {
+      // Delete all subcollections data
+      const collections = ['groups', 'matches', 'fixtures', 'knockout'];
+      
+      for (const collectionName of collections) {
+        const subCollectionRef = collection(db, 'tournaments', tournamentId, collectionName);
+        const snapshot = await getDocs(subCollectionRef);
+        
+        for (const document of snapshot.docs) {
+          await deleteDoc(doc(db, 'tournaments', tournamentId, collectionName, document.id));
+        }
+      }
+
+      setShowKnockout(false);
+      toast({ title: "Success", description: "Tournament reset successfully. You can now start fresh!" });
+      setResetDialogOpen(false);
+    } catch (error) {
+      toast({ 
+        title: "Error", 
+        description: "Failed to reset tournament",
+        variant: "destructive" 
+      });
+      console.error(error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-accent/20 p-4">
       <div className="max-w-7xl mx-auto">
@@ -342,6 +382,10 @@ export const TournamentPage = ({ tournamentId, numberOfGroups, onBack }: Tournam
             <p className="text-muted-foreground">Manage teams and track tournament progress</p>
           </div>
           <div className="flex gap-2">
+            <Button onClick={() => setResetDialogOpen(true)} variant="outline">
+              <RotateCcw className="w-4 h-4 mr-2" />
+              Reset Tournament
+            </Button>
             <Button onClick={onBack} variant="outline">Back</Button>
             <Button onClick={handleLogout} variant="outline">
               <LogOut className="w-4 h-4 mr-2" />
@@ -400,6 +444,23 @@ export const TournamentPage = ({ tournamentId, numberOfGroups, onBack }: Tournam
           </>
         )}
       </div>
+
+      <AlertDialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reset Tournament</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to reset this tournament? This will permanently delete all teams, matches, fixtures, and knockout data. You will start with a clean slate. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleResetTournament} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Reset Tournament
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
