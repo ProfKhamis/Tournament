@@ -58,7 +58,25 @@ export const TournamentPage = ({ tournamentId, numberOfGroups, onBack }: Tournam
   const handleAddTeam = (groupId: string, teamName: string) => {
     const targetGroup = groups.find(g => g.id === groupId);
     
-    if (targetGroup?.teams.some(team => team.name.toLowerCase() === teamName.toLowerCase())) {
+    if (!targetGroup) {
+      toast({ 
+        title: "Error", 
+        description: "Group not found",
+        variant: "destructive" 
+      });
+      return;
+    }
+
+    if (targetGroup.teams.length >= 4) {
+      toast({ 
+        title: "Error", 
+        description: "Maximum 4 teams per group. Limit reached.",
+        variant: "destructive" 
+      });
+      return;
+    }
+    
+    if (targetGroup.teams.some(team => team.name.toLowerCase() === teamName.toLowerCase())) {
       toast({ 
         title: "Error", 
         description: "A team with this name already exists in this group",

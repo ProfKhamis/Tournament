@@ -39,7 +39,6 @@ const AdminPanel = ({ groups, onAddTeam, onRemoveTeam, onEditTeam, onSubmitScore
     onAddTeam(selectedGroup, newTeamName);
     setNewTeamName('');
     setSelectedGroup('');
-    toast({ title: "Success", description: "Team added successfully" });
   };
 
   const handleEditTeam = () => {
@@ -49,7 +48,6 @@ const AdminPanel = ({ groups, onAddTeam, onRemoveTeam, onEditTeam, onSubmitScore
     }
     onEditTeam(editingTeam.groupId, editingTeam.teamId, editingTeam.name);
     setEditingTeam(null);
-    toast({ title: "Success", description: "Team name updated successfully" });
   };
 
   const handleSubmitScore = () => {
