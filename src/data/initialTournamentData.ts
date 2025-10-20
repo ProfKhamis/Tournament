@@ -10,6 +10,7 @@ export const createTeam = (id: string, name: string): Team => ({
   goalsAgainst: 0,
   points: 0,
   goalDifference: 0,
+  played: 0,
 });
 
 export const createInitialGroups = (numberOfGroups: number): Group[] => {
