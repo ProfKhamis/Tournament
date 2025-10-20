@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Team, Group } from '@/types/tournament';
-import { Plus, Trash2, Edit2, Trophy } from 'lucide-react';
+import { Plus, Trash2, Edit2, Trophy, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface AdminPanelProps {
@@ -29,16 +29,22 @@ const AdminPanel = ({ groups, onAddTeam, onRemoveTeam, onEditTeam, onSubmitScore
     homeScore: '',
     awayScore: ''
   });
+  const [isAddingTeam, setIsAddingTeam] = useState(false);
   const { toast } = useToast();
 
-  const handleAddTeam = () => {
+  const handleAddTeam = async () => {
     if (!newTeamName.trim() || !selectedGroup) {
       toast({ title: "Error", description: "Please fill in all fields", variant: "destructive" });
       return;
     }
-    onAddTeam(selectedGroup, newTeamName);
-    setNewTeamName('');
-    setSelectedGroup('');
+    setIsAddingTeam(true);
+    try {
+      await onAddTeam(selectedGroup, newTeamName);
+      setNewTeamName('');
+      setSelectedGroup('');
+    } finally {
+      setIsAddingTeam(false);
+    }
   };
 
   const handleEditTeam = () => {
@@ -128,8 +134,15 @@ const AdminPanel = ({ groups, onAddTeam, onRemoveTeam, onEditTeam, onSubmitScore
                     </Select>
                   </div>
                 </div>
-                <Button onClick={handleAddTeam} className="w-full">
-                  Add Team
+                <Button onClick={handleAddTeam} className="w-full" disabled={isAddingTeam}>
+                  {isAddingTeam ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Adding Team...
+                    </>
+                  ) : (
+                    'Add Team'
+                  )}
                 </Button>
               </CardContent>
             </Card>

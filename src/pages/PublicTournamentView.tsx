@@ -32,11 +32,11 @@ export const PublicTournamentView = () => {
     // 🟢 State to manage the initial loading of tournament details
     const [isLoadingDetails, setIsLoadingDetails] = useState(true);
 
-    // useTournament hook already handles data fetching and potentially its own loading state
-    const { groups, matches, fixtures, knockoutMatches, isLoading: isLoadingTournamentData } = useTournament(tournamentId || '', numberOfGroups);
+    // useTournament hook already handles data fetching
+    const { groups, matches, fixtures, knockoutMatches } = useTournament(tournamentId || '', numberOfGroups);
 
     // 🟢 COMBINED LOADING STATE
-    const isTotalLoading = isLoadingDetails || isLoadingTournamentData;
+    const isTotalLoading = isLoadingDetails;
 
     useEffect(() => {
         if (!tournamentId || !db) return;

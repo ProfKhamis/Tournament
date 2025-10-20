@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Loader2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,6 +41,7 @@ export const TournamentSelector = ({ onSelectTournament }: TournamentSelectorPro
   const [numberOfGroups, setNumberOfGroups] = useState('4');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [tournamentToDelete, setTournamentToDelete] = useState<Tournament | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -64,6 +65,7 @@ export const TournamentSelector = ({ onSelectTournament }: TournamentSelectorPro
   const handleCreateTournament = async () => {
     if (!tournamentName.trim() || !user) return;
 
+    setIsCreating(true);
     try {
       const docRef = await addDoc(collection(db, 'tournaments'), {
         name: tournamentName,
@@ -78,6 +80,8 @@ export const TournamentSelector = ({ onSelectTournament }: TournamentSelectorPro
       onSelectTournament(docRef.id, parseInt(numberOfGroups));
     } catch (error) {
       toast.error('Failed to create tournament');
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -171,10 +175,17 @@ export const TournamentSelector = ({ onSelectTournament }: TournamentSelectorPro
                 </SelectContent>
               </Select>
               <div className="flex gap-2">
-                <Button onClick={handleCreateTournament} className="flex-1">
-                  Create
+                <Button onClick={handleCreateTournament} className="flex-1" disabled={isCreating}>
+                  {isCreating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    'Create'
+                  )}
                 </Button>
-                <Button variant="outline" onClick={() => setShowCreate(false)} className="flex-1">
+                <Button variant="outline" onClick={() => setShowCreate(false)} className="flex-1" disabled={isCreating}>
                   Cancel
                 </Button>
               </div>

@@ -54,15 +54,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signUp = async (email: string, password: string) => {
     if (!auth) throw new Error('Firebase not configured');
-    // Optional: validate email format
     const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     if (!isValidEmail) throw new Error('Please enter a valid email address');
     
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      // Send verification email
-      if (auth.currentUser) {
-        await sendEmailVerification(auth.currentUser);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      // Send verification email immediately after account creation
+      if (userCredential.user) {
+        await sendEmailVerification(userCredential.user);
       }
     } catch (error: any) {
       throw new Error(error.message);

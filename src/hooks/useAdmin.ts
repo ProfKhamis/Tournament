@@ -16,10 +16,17 @@ export const useAdmin = () => {
         return;
       }
 
+      // Check email verification first
+      if (!user.emailVerified) {
+        setIsAdmin(false);
+        setLoading(false);
+        return;
+      }
+
       try {
         const userRoleDoc = await getDoc(doc(db, 'user_roles', user.uid));
         const role = userRoleDoc.data()?.role;
-        setIsAdmin(role === 'admin');
+        setIsAdmin(role === 'admin' && user.emailVerified);
       } catch (error) {
         console.error('Error checking admin status:', error);
         setIsAdmin(false);
