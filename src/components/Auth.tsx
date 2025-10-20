@@ -38,7 +38,7 @@ export const Auth = () => {
         toast.success('Login successful! Welcome back.');
       } else {
         await signUp(email, password);
-        toast.success('Account created! Check your email to verify before logging in.');
+        toast.success("Account created! Check your email to verify before logging in. If you don't see it, check your spam folder.");
         const currentUser = auth.currentUser as FirebaseUser | null;
         if (currentUser && !currentUser.emailVerified) {
           await sendEmailVerification(currentUser);
