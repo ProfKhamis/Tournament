@@ -35,6 +35,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isEmailVerified, setIsEmailVerified] = useState(false);
 
   useEffect(() => {
+    if (!auth) {
+      console.warn('Firebase auth not initialized. Skipping auth state listener.');
+      setLoading(false);
+      return;
+    }
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
       setIsEmailVerified(firebaseUser?.emailVerified || false);
