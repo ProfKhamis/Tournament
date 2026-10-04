@@ -28,6 +28,7 @@ export const PublicTournamentView = () => {
     const navigate = useNavigate();
     const [tournamentName, setTournamentName] = useState('');
     const [numberOfGroups, setNumberOfGroups] = useState(4);
+    const [format, setFormat] = useState<string>('groups');
     
     // 🟢 State to manage the initial loading of tournament details
     const [isLoadingDetails, setIsLoadingDetails] = useState(true);
@@ -47,7 +48,8 @@ export const PublicTournamentView = () => {
             if (doc.exists()) {
                 const data = doc.data();
                 setTournamentName(data.name);
-                setNumberOfGroups(data.numberOfGroups);
+                setNumberOfGroups(data.numberOfGroups ?? 0);
+                setFormat(data.format || 'groups');
             } else {
                 // Optional: navigate to 404 or error page if tournament not found
                 setTournamentName('Tournament Not Found');
@@ -113,6 +115,15 @@ export const PublicTournamentView = () => {
                         </div>
 
                         {/* Tabs Navigation (Responsive) */}
+                        {format !== 'groups' ? (
+                            hasKnockoutMatches ? (
+                                <KnockoutBracket matches={knockoutMatches} onUpdateScore={() => {}} readOnly />
+                            ) : (
+                                <div className="text-center py-12 bg-card rounded-xl border border-dashed">
+                                    <p className="text-muted-foreground">Bracket not set up yet</p>
+                                </div>
+                            )
+                        ) : (
                         <Tabs defaultValue="groups" className="w-full">
                             <TabsList className="grid w-full max-w-4xl mx-auto grid-cols-4 h-auto">
                                 <TabsTrigger value="groups" className="text-sm sm:text-base">Groups</TabsTrigger>
@@ -166,6 +177,7 @@ export const PublicTournamentView = () => {
                                 )}
                             </TabsContent>
                         </Tabs>
+                        )}
                     </>
                 )}
             </main>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Team, Match, KnockoutMatch } from '@/types/tournament';
 import { createTeam } from '@/data/initialTournamentData';
 import GroupTable from '@/components/GroupTable';
@@ -6,6 +6,9 @@ import AdminPanel from '@/components/AdminPanel';
 import MatchTracker from '@/components/MatchTracker';
 import FixtureGenerator from '@/components/FixtureGenerator';
 import { KnockoutBracket } from '@/components/KnockoutBracket';
+import { KnockoutSetup } from '@/components/KnockoutSetup';
+import { buildBracket, applyKnockoutScore, FORMAT_LABELS } from '@/lib/bracket';
+import { TournamentFormat } from '@/types/tournament';
 import { useToast } from '@/hooks/use-toast';
 import { useTournament } from '@/hooks/useTournament';
 import { Button } from '@/components/ui/button';
@@ -32,7 +35,7 @@ import {
     SheetClose
 } from "@/components/ui/sheet"; 
 
-import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, deleteDoc, doc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 
 interface TournamentPageProps {
@@ -49,6 +52,14 @@ export const TournamentPage = ({ tournamentId, numberOfGroups, onBack }: Tournam
   const [showKnockout, setShowKnockout] = useState(false);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false); 
+  const [format, setFormat] = useState<TournamentFormat>('groups');
+
+  useEffect(() => {
+    if (!db || !tournamentId) return;
+    return onSnapshot(doc(db, 'tournaments', tournamentId), snap => {
+      setFormat((snap.data()?.format as TournamentFormat) || 'groups');
+    });
+  }, [tournamentId]);
 
 
   // --- Helper Functions (Restored) ---
@@ -267,94 +278,39 @@ export const TournamentPage = ({ tournamentId, numberOfGroups, onBack }: Tournam
   }, [groups]);
 
   const generateKnockoutBracket = () => {
-    const top2Teams = groups.flatMap(group => {
-      const sortedTeams = [...group.teams].sort((a, b) => 
-        b.points - a.points || b.goalDifference - a.goalDifference
-      );
-      return sortedTeams.slice(0, 2).map((team, idx) => ({ 
-        ...team, 
-        groupId: group.id, 
-        position: idx + 1 
-      }));
-    });
-
-    if (top2Teams.length !== numberOfGroups * 2) {
-      toast({ 
-        title: "Error", 
-        description: "Group stage must be complete to generate knockout bracket",
-        variant: "destructive" 
+    const ranked = groups.slice(0, numberOfGroups).map(group =>
+      [...group.teams].sort((a, b) =>
+        b.points - a.points || b.goalDifference - a.goalDifference || b.goalsFor - a.goalsFor
+      )
+    );
+    const needed = numberOfGroups === 3 ? 3 : 2;
+    if (ranked.length < 2 || ranked.some(g => g.length < needed)) {
+      toast({
+        title: "Error",
+        description: `Each group needs at least ${needed} teams to generate the knockout bracket`,
+        variant: "destructive"
       });
       return;
     }
-
-    const quarters: KnockoutMatch[] = [
-      { id: 'q1', homeTeam: top2Teams[0].name, awayTeam: top2Teams[5].name, homeScore: null, awayScore: null, round: 'quarter', matchNumber: 1 },
-      { id: 'q2', homeTeam: top2Teams[2].name, awayTeam: top2Teams[7].name, homeScore: null, awayScore: null, round: 'quarter', matchNumber: 2 },
-      { id: 'q3', homeTeam: top2Teams[4].name, awayTeam: top2Teams[3].name, homeScore: null, awayScore: null, round: 'quarter', matchNumber: 3 },
-      { id: 'q4', homeTeam: top2Teams[6].name, awayTeam: top2Teams[1].name, homeScore: null, awayScore: null, round: 'quarter', matchNumber: 4 },
-    ];
-
-    const semis: KnockoutMatch[] = [
-      { id: 's1', homeTeam: '', awayTeam: '', homeScore: null, awayScore: null, round: 'semi', matchNumber: 1 },
-      { id: 's2', homeTeam: '', awayTeam: '', homeScore: null, awayScore: null, round: 'semi', matchNumber: 2 },
-    ];
-
-    const final: KnockoutMatch = { 
-      id: 'f1', 
-      homeTeam: '', 
-      awayTeam: '', 
-      homeScore: null, 
-      awayScore: null, 
-      round: 'final', 
-      matchNumber: 1 
-    };
-
-    updateKnockoutMatches([...quarters, ...semis, final]);
+    const [A, B, C, D] = ranked;
+    let order: string[];
+    if (numberOfGroups === 2) {
+      order = [A[0], B[1], B[0], A[1]].map(t => t.name);
+    } else if (numberOfGroups === 3) {
+      const thirds = [A[2], B[2], C[2]].sort((a, b) =>
+        b.points - a.points || b.goalDifference - a.goalDifference || b.goalsFor - a.goalsFor
+      );
+      order = [A[0], thirds[1], B[1], C[1], B[0], thirds[0], C[0], A[1]].map(t => t.name);
+    } else {
+      order = [A[0], B[1], C[0], D[1], B[0], A[1], D[0], C[1]].map(t => t.name);
+    }
+    updateKnockoutMatches(buildBracket(order));
     setShowKnockout(true);
     toast({ title: "Success", description: "Knockout bracket generated!" });
   };
 
   const handleKnockoutScore = (matchId: string, homeScore: number, awayScore: number) => {
-    const updatedKnockout = knockoutMatches.map(match => {
-      if (match.id === matchId) {
-        return { ...match, homeScore, awayScore };
-      }
-      return match;
-    });
-
-    const completedMatch = updatedKnockout.find(m => m.id === matchId);
-    if (completedMatch && completedMatch.homeScore !== null && completedMatch.awayScore !== null) {
-      const winner = completedMatch.homeScore > completedMatch.awayScore 
-        ? completedMatch.homeTeam 
-        : completedMatch.awayTeam;
-
-      if (matchId.startsWith('q')) {
-        const quarterNum = parseInt(matchId.substring(1));
-        const semiIdx = quarterNum <= 2 ? 0 : 1;
-        const semiMatch = updatedKnockout.find(m => m.id === `s${semiIdx + 1}`);
-        
-        if (semiMatch) {
-          if (quarterNum % 2 === 1) {
-            semiMatch.homeTeam = winner;
-          } else {
-            semiMatch.awayTeam = winner;
-          }
-        }
-      } else if (matchId.startsWith('s')) {
-        const semiNum = parseInt(matchId.substring(1));
-        const finalMatch = updatedKnockout.find(m => m.id === 'f1');
-        
-        if (finalMatch) {
-          if (semiNum === 1) {
-            finalMatch.homeTeam = winner;
-          } else {
-            finalMatch.awayTeam = winner;
-          }
-        }
-      }
-    }
-
-    updateKnockoutMatches(updatedKnockout);
+    updateKnockoutMatches(applyKnockoutScore(knockoutMatches, matchId, homeScore, awayScore));
   };
 
   const handleLogout = async () => {
@@ -466,7 +422,16 @@ export const TournamentPage = ({ tournamentId, numberOfGroups, onBack }: Tournam
 
         {/* --- Main Content --- */}
 
-        {!showKnockout ? (
+        {format !== 'groups' ? (
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold text-center">{FORMAT_LABELS[format]} Knockout</h2>
+            {knockoutMatches.length === 0 ? (
+              <KnockoutSetup format={format} onStart={async (teams) => { await updateKnockoutMatches(buildBracket(teams)); }} />
+            ) : (
+              <KnockoutBracket matches={knockoutMatches} onUpdateScore={handleKnockoutScore} />
+            )}
+          </div>
+        ) : !showKnockout ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               {groups.slice(0, numberOfGroups).map((group) => (
@@ -482,7 +447,7 @@ export const TournamentPage = ({ tournamentId, numberOfGroups, onBack }: Tournam
                   <span className="text-sm font-medium">Top 2 from each group advance</span>
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  {numberOfGroups * 2} teams advance to Quarter-Finals
+                  {numberOfGroups === 2 ? '4 teams advance to Semi-Finals' : numberOfGroups === 3 ? '6 teams + 2 best third-placed advance to Quarter-Finals' : '8 teams advance to Quarter-Finals'}
                 </div>
               </div>
               <div className="mt-4 text-center">

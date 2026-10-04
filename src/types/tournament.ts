@@ -37,12 +37,17 @@ export interface Match {
   date: string;
 }
 
+export type KnockoutRound = 'r16' | 'quarter' | 'semi' | 'final';
+
+/** How a tournament starts: with group stages, or directly at a knockout round. */
+export type TournamentFormat = 'groups' | 'r16' | 'quarter' | 'semi';
+
 export interface KnockoutMatch {
   id: string;
   homeTeam: string;
   awayTeam: string;
   homeScore: number | null;
   awayScore: number | null;
-  round: 'quarter' | 'semi' | 'final';
+  round: KnockoutRound;
   matchNumber: number;
 }

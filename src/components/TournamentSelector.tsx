@@ -9,6 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Trash2, Loader2 } from 'lucide-react';
+import { TournamentFormat } from '@/types/tournament';
+import { FORMAT_LABELS, FORMAT_TEAM_COUNT } from '@/lib/bracket';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,6 +26,7 @@ interface Tournament {
   id: string;
   name: string;
   numberOfGroups: number;
+  format?: TournamentFormat;
   createdBy: string;
   createdAt: any;
 }
@@ -39,6 +42,7 @@ export const TournamentSelector = ({ onSelectTournament }: TournamentSelectorPro
   const [showCreate, setShowCreate] = useState(false);
   const [tournamentName, setTournamentName] = useState('');
   const [numberOfGroups, setNumberOfGroups] = useState('4');
+  const [format, setFormat] = useState<TournamentFormat>('groups');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [tournamentToDelete, setTournamentToDelete] = useState<Tournament | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -66,10 +70,12 @@ export const TournamentSelector = ({ onSelectTournament }: TournamentSelectorPro
     if (!tournamentName.trim() || !user) return;
 
     setIsCreating(true);
+    const groupsCount = format === 'groups' ? parseInt(numberOfGroups) : 0;
     try {
       const docRef = await addDoc(collection(db, 'tournaments'), {
         name: tournamentName,
-        numberOfGroups: parseInt(numberOfGroups),
+        numberOfGroups: groupsCount,
+        format,
         createdBy: user.uid,
         createdAt: Timestamp.now()
       });
@@ -77,7 +83,7 @@ export const TournamentSelector = ({ onSelectTournament }: TournamentSelectorPro
       toast.success('Tournament created successfully');
       setShowCreate(false);
       setTournamentName('');
-      onSelectTournament(docRef.id, parseInt(numberOfGroups));
+      onSelectTournament(docRef.id, groupsCount);
     } catch (error) {
       toast.error('Failed to create tournament');
     } finally {
@@ -138,7 +144,7 @@ export const TournamentSelector = ({ onSelectTournament }: TournamentSelectorPro
                     >
                       <span>{tournament.name}</span>
                       <span className="text-sm text-muted-foreground">
-                        {tournament.numberOfGroups} groups
+                        {(tournament.format ?? 'groups') === 'groups' ? `${tournament.numberOfGroups} groups` : `Starts at ${FORMAT_LABELS[tournament.format!]}`}
                       </span>
                     </Button>
                     {isAdmin && (
@@ -164,6 +170,18 @@ export const TournamentSelector = ({ onSelectTournament }: TournamentSelectorPro
                 value={tournamentName}
                 onChange={(e) => setTournamentName(e.target.value)}
               />
+              <Select value={format} onValueChange={(v) => setFormat(v as TournamentFormat)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Format" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="groups">Group Stage (then knockouts)</SelectItem>
+                  <SelectItem value="r16">Start at Round of 16 ({FORMAT_TEAM_COUNT.r16} teams)</SelectItem>
+                  <SelectItem value="quarter">Start at Quarter Finals ({FORMAT_TEAM_COUNT.quarter} teams)</SelectItem>
+                  <SelectItem value="semi">Start at Semi Finals ({FORMAT_TEAM_COUNT.semi} teams)</SelectItem>
+                </SelectContent>
+              </Select>
+              {format === 'groups' && (
               <Select value={numberOfGroups} onValueChange={setNumberOfGroups}>
                 <SelectTrigger>
                   <SelectValue placeholder="Number of Groups" />
@@ -174,6 +192,7 @@ export const TournamentSelector = ({ onSelectTournament }: TournamentSelectorPro
                   <SelectItem value="4">4 Groups</SelectItem>
                 </SelectContent>
               </Select>
+              )}
               <div className="flex gap-2">
                 <Button onClick={handleCreateTournament} className="flex-1" disabled={isCreating}>
                   {isCreating ? (
